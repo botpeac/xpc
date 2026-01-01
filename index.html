@@ -3,89 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burmese Text Overlay Tool</title>
+    <title>Burmese Gold Text Editor</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #2c2c2c; color: white; padding: 20px; }
-        .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        canvas { border: 2px solid #555; max-width: 100%; height: auto; background: #000; }
-        .controls { background: #3d3d3d; padding: 20px; border-radius: 8px; width: 300px; }
-        .control-group { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; margin-bottom: 5px; color: #ccc; }
-        input[type="range"], input[type="text"], input[type="file"] { width: 100%; }
-        .color-row { display: flex; gap: 10px; align-items: center; }
-        button { width: 100%; padding: 10px; background: #e3a832; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        button:hover { background: #f6e5a0; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; background: #1a1a1a; color: #eee; padding: 20px; margin: 0; }
+        .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; }
+        canvas { border: 4px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 100%; height: auto; background: #000; border-radius: 4px; }
+        .controls { background: #252525; padding: 25px; border-radius: 12px; width: 320px; border: 1px solid #444; }
+        .control-group { margin-bottom: 18px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        label { display: block; font-size: 13px; margin-bottom: 8px; color: #e3a832; font-weight: bold; text-transform: uppercase; }
+        input[type="range"], input[type="text"], input[type="file"] { width: 100%; margin-top: 5px; }
+        .color-row { display: flex; gap: 15px; margin-top: 5px; }
+        .color-item { flex: 1; text-align: center; font-size: 10px; }
+        button { width: 100%; padding: 12px; background: #e3a832; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #f6e5a0; color: #000; }
+        h2 { color: #e3a832; margin-bottom: 30px; }
     </style>
 </head>
 <body>
 
-    <h2>Text on Photo Editor</h2>
+    <h2>Burmese Text Overlay Tool</h2>
 
     <div class="container">
-        <canvas id="textCanvas" width="800" height="500"></canvas>
+        <canvas id="textCanvas" width="800" height="600"></canvas>
 
         <div class="controls">
             <div class="control-group">
-                <label>1. Upload Background</label>
+                <label>🖼️ 1. Upload Background</label>
                 <input type="file" id="imageLoader" accept="image/*">
             </div>
 
             <div class="control-group">
-                <label>2. Your Text (Burmese supported)</label>
-                <input type="text" id="textInput" placeholder="Enter text here..." value="မြန်မာစာ">
+                <label>✍️ 2. Text Content</label>
+                <input type="text" id="textInput" value="မြန်မာစာ">
             </div>
 
             <div class="control-group">
-                <label>3. Font Size</label>
-                <input type="range" id="fontSize" min="10" max="200" value="60">
+                <label>↔️ Position (Left/Right & Up/Down)</label>
+                <input type="range" id="xPos" min="0" max="800" value="400">
+                <input type="range" id="yPos" min="0" max="600" value="300">
             </div>
 
             <div class="control-group">
-                <label>4. Vertical Position</label>
-                <input type="range" id="yPos" min="0" max="500" value="250">
+                <label>📏 Font Size</label>
+                <input type="range" id="fontSize" min="20" max="300" value="80">
             </div>
 
             <div class="control-group">
-                <label>5. Font Color</label>
+                <label>🎨 Gradient Colors (Top & Bottom)</label>
                 <div class="color-row">
-                    <input type="color" id="textColor" value="#ebc874">
-                    <span>Pick Hex</span>
+                    <div class="color-item"><input type="color" id="color1" value="#F6E5A0"><br>Top</div>
+                    <div class="color-item"><input type="color" id="color2" value="#B38E46"><br>Bottom</div>
                 </div>
             </div>
 
             <div class="control-group">
-                <label>6. Shadow Intensity</label>
-                <input type="range" id="shadowBlur" min="0" max="20" value="10">
+                <label>🌑 Shadow & Glow</label>
+                <input type="range" id="shadowBlur" min="0" max="30" value="15">
             </div>
 
-            <button id="downloadBtn">Download Image</button>
+            <button id="downloadBtn">💾 Save Image</button>
         </div>
     </div>
 
     <script>
         const canvas = document.getElementById('textCanvas');
         const ctx = canvas.getContext('2d');
-        const imageLoader = document.getElementById('imageLoader');
-        const textInput = document.getElementById('textInput');
-        const fontSize = document.getElementById('fontSize');
-        const textColor = document.getElementById('textColor');
-        const yPos = document.getElementById('yPos');
-        const shadowBlur = document.getElementById('shadowBlur');
-        const downloadBtn = document.getElementById('downloadBtn');
-
+        const elements = ['imageLoader', 'textInput', 'fontSize', 'color1', 'color2', 'xPos', 'yPos', 'shadowBlur'];
+        const inputs = {};
+        
+        elements.forEach(id => inputs[id] = document.getElementById(id));
+        
         let img = new Image();
 
-        // Initialize Canvas with placeholder
-        window.onload = () => draw();
-
         // Handle Image Upload
-        imageLoader.addEventListener('change', (e) => {
+        inputs.imageLoader.addEventListener('change', (e) => {
             const reader = new FileReader();
             reader.onload = (event) => {
                 img.onload = () => {
-                    // Adjust canvas size to match image aspect ratio
-                    canvas.height = (img.height / img.width) * canvas.width;
-                    yPos.max = canvas.height;
+                    // Fit canvas to image ratio
+                    const ratio = img.height / img.width;
+                    canvas.height = canvas.width * ratio;
+                    // Update range limits based on new height
+                    inputs.yPos.max = canvas.height;
+                    inputs.xPos.max = canvas.width;
                     draw();
                 };
                 img.src = event.target.result;
@@ -93,48 +93,60 @@
             reader.readAsDataURL(e.target.files[0]);
         });
 
-        // Event listeners for sliders/inputs
-        [textInput, fontSize, textColor, yPos, shadowBlur].forEach(el => {
-            el.addEventListener('input', draw);
+        // Add listeners to all controls
+        Object.keys(inputs).forEach(key => {
+            if(key !== 'imageLoader') inputs[key].addEventListener('input', draw);
         });
 
         function draw() {
-            // Clear Canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Background Image
+            // 1. Draw Background
             if (img.src) {
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             } else {
-                ctx.fillStyle = "#1a1a1a";
+                ctx.fillStyle = "#222";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
-            // Text Styles (Applying the hex/styles from your image)
-            const text = textInput.value;
-            ctx.font = `bold ${fontSize.value}px "Myanmar3", "Pyidaungsu", sans-serif`;
+            // 2. Setup Font
+            const size = parseInt(inputs.fontSize.value);
+            const x = parseInt(inputs.xPos.value);
+            const y = parseInt(inputs.yPos.value);
+            ctx.font = `bold ${size}px "Pyidaungsu", "Myanmar3", sans-serif`;
             ctx.textAlign = "center";
-            
-            // Add Shadow (3D effect)
-            ctx.shadowColor = "rgba(0,0,0,0.8)";
-            ctx.shadowOffsetX = 4;
-            ctx.shadowOffsetY = 4;
-            ctx.shadowBlur = shadowBlur.value;
 
-            // Apply Color
-            ctx.fillStyle = textColor.value;
+            // 3. Create Gradient
+            // Gradient starts from top of text to bottom of text
+            const gradient = ctx.createLinearGradient(0, y - size, 0, y);
+            gradient.addColorStop(0, inputs.color1.value);
+            gradient.addColorStop(1, inputs.color2.value);
+
+            // 4. Apply Effects
+            ctx.shadowColor = "rgba(0,0,0,0.8)";
+            ctx.shadowBlur = inputs.shadowBlur.value;
+            ctx.shadowOffsetX = 5;
+            ctx.shadowOffsetY = 5;
+
+            // 5. Render
+            ctx.fillStyle = gradient;
+            ctx.fillText(inputs.textInput.value, x, y);
             
-            // Draw Text
-            ctx.fillText(text, canvas.width / 2, yPos.value);
+            // Add a thin border to text for clarity
+            ctx.strokeStyle = "rgba(255,255,255,0.2)";
+            ctx.lineWidth = 1;
+            ctx.strokeText(inputs.textInput.value, x, y);
         }
 
-        // Download feature
-        downloadBtn.addEventListener('click', () => {
+        document.getElementById('downloadBtn').addEventListener('click', () => {
             const link = document.createElement('a');
-            link.download = 'edited-photo.png';
-            link.href = canvas.toDataURL();
+            link.download = 'burmese-design.png';
+            link.href = canvas.toDataURL('image/png');
             link.click();
         });
+
+        // Initial draw
+        window.onload = draw;
     </script>
 </body>
 </html>
